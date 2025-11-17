@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>diktátOR - Inteligentní diktáty</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>diktátOR</h1>
+            <p class="subtitle">Inteligentní systém pro procvičování diktátů</p>
+        </header>
+
+        <!-- Krok 1: Nastavení -->
+        <div id="step-settings" class="step active">
+            <h2>Nastavení diktátu</h2>
+            
+            <div class="form-group">
+                <label for="grade-select">Vyberte ročník:</label>
+                <select id="grade-select" class="form-control">
+                    <option value="1">1. třída</option>
+                    <option value="2">2. třída</option>
+                    <option value="3">3. třída</option>
+                    <option value="4">4. třída</option>
+                    <option value="5" selected>5. třída</option>
+                    <option value="6">6. třída</option>
+                    <option value="7">7. třída</option>
+                    <option value="8">8. třída</option>
+                    <option value="9">9. třída</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="num-sentences">Počet vět:</label>
+                <input type="number" id="num-sentences" class="form-control" value="10" min="5" max="20">
+            </div>
+
+            <div class="form-group">
+                <label for="pause-duration">Pauza mezi větami (sekundy):</label>
+                <input type="number" id="pause-duration" class="form-control" value="7" min="2" max="15" step="0.5">
+            </div>
+
+            <button id="generate-btn" class="btn btn-primary">Vygenerovat diktát</button>
+        </div>
+
+        <!-- Krok 2: Přehrávání diktátu -->
+        <div id="step-dictation" class="step">
+            <h2>Diktát</h2>
+            
+            <div id="loading" class="loading hidden">
+                <div class="spinner"></div>
+                <p>Generuji diktát...</p>
+            </div>
+
+            <div id="audio-player" class="audio-player hidden">
+                <audio id="audio" controls></audio>
+                <p class="info">Poslechněte si diktát a napište věty na papír.</p>
+            </div>
+
+            <button id="upload-btn" class="btn btn-secondary hidden">Pokračovat k vyhodnocení</button>
+        </div>
+
+        <!-- Krok 3: Nahrání fotky -->
+        <div id="step-upload" class="step">
+            <h2>Nahrajte fotografii</h2>
+            
+            <div class="upload-area">
+                <button id="camera-btn" class="btn btn-camera">
+                    📷 Vyfotit diktát
+                </button>
+                <button id="gallery-btn" class="btn btn-camera">
+                    🖼️ Vybrat z galerie
+                </button>
+                
+                <input type="file" id="camera-input" accept="image/*" capture="camera" style="display: none;">
+                <input type="file" id="gallery-input" accept="image/*" style="display: none;">
+            </div>
+
+            <div id="preview-container" class="preview-container hidden">
+                <canvas id="preview-canvas"></canvas>
+                <button id="rotate-btn" class="btn btn-small">↻ Otočit</button>
+                <button id="evaluate-btn" class="btn btn-primary">Vyhodnotit</button>
+            </div>
+        </div>
+
+        <!-- Krok 4: Vyhodnocení -->
+        <div id="step-results" class="step">
+            <h2>Vyhodnocení</h2>
+            
+            <div id="evaluation-loading" class="loading hidden">
+                <div class="spinner"></div>
+                <p>Vyhodnocuji diktát...</p>
+            </div>
+
+            <div id="results" class="results hidden"></div>
+            
+            <button id="new-dictation-btn" class="btn btn-primary hidden">Nový diktát</button>
+        </div>
+
+        <!-- Status zprávy -->
+        <div id="status" class="status"></div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
