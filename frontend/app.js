@@ -249,12 +249,31 @@ function displayResults(evaluation) {
         </div>`;
     }
     
-    // Text přečtený z fotky
+    // Fotka diktátu
+    const imageDataUrl = previewCanvas.toDataURL('image/jpeg', 0.9);
+    html += `
+        <div class="result-section">
+            <h4>Vyfocený diktát:</h4>
+            <img src="${imageDataUrl}" alt="Vyfocený diktát" style="max-width: 100%; border: 1px solid #ddd; border-radius: 4px; margin-top: 10px;">
+        </div>
+    `;
+    
+    // Originální nadiktovaný text
+    if (currentDictation && currentDictation.full_text) {
+        html += `
+            <div class="result-section">
+                <h4>Originální nadiktovaný text:</h4>
+                <div class="text-box" style="background-color: #f0f8ff;">${currentDictation.full_text}</div>
+            </div>
+        `;
+    }
+    
+    // Text přečtený z fotky (OCR)
     if (evaluation.ocr_text) {
         html += `
             <div class="result-section">
-                <h4>Váš napsaný text:</h4>
-                <div class="text-box">${evaluation.ocr_text}</div>
+                <h4>Text přečtený z fotky (OCR):</h4>
+                <div class="text-box" style="background-color: #fff8dc;">${evaluation.ocr_text}</div>
             </div>
         `;
     }

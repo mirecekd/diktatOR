@@ -21,9 +21,10 @@ DATA_DIR = os.path.join(os.path.dirname(BASE_DIR), 'data')
 DICTATIONS_DIR = os.path.join(DATA_DIR, 'dictations')
 AUDIO_DIR = os.path.join(DATA_DIR, 'audio')
 UPLOADS_DIR = os.path.join(DATA_DIR, 'uploads')
+EVALUATIONS_DIR = os.path.join(DATA_DIR, 'evaluations')
 
 # Ujistíme se, že adresáře existují
-for directory in [DICTATIONS_DIR, AUDIO_DIR, UPLOADS_DIR]:
+for directory in [DICTATIONS_DIR, AUDIO_DIR, UPLOADS_DIR, EVALUATIONS_DIR]:
     os.makedirs(directory, exist_ok=True)
 
 @app.route('/')
@@ -137,12 +138,18 @@ def upload_image():
 @app.route('/api/evaluate', methods=['POST'])
 def evaluate_dictation_endpoint():
     """Vyhodnotí diktát pomocí OCR a LLM"""
+    print("DEBUG: Evaluate endpoint called")
+    
     if 'image' not in request.files:
+        print("DEBUG: No image file in request")
         return jsonify({'error': 'No image file provided'}), 400
     
     original_text = request.form.get('original_text', '')
     if not original_text:
+        print("DEBUG: No original text provided")
         return jsonify({'error': 'Original text is required'}), 400
+    
+    print(f"DEBUG: Original text length: {len(original_text)}")
     
     try:
         # Uložení obrázku
@@ -151,31 +158,57 @@ def evaluate_dictation_endpoint():
         filename = f"evaluation_{timestamp}.jpg"
         filepath = os.path.join(UPLOADS_DIR, filename)
         
+        print(f"DEBUG: Saving image to {filepath}")
+        
         # Uložení a konverze
         img = Image.open(file.stream)
         if img.mode in ('RGBA', 'LA', 'P'):
             img = img.convert('RGB')
         img.save(filepath, 'JPEG', quality=95)
         
+        print("DEBUG: Image saved successfully")
+        
         # OCR - extrakce textu z obrázku
+        print("DEBUG: Starting OCR extraction...")
         ocr_result = extract_text_from_image(filepath)
+        print(f"DEBUG: OCR result: {ocr_result}")
+        
         if 'error' in ocr_result:
+            print(f"DEBUG: OCR error: {ocr_result['error']}")
             return jsonify({'error': f"OCR failed: {ocr_result['error']}"}), 500
         
         written_text = ocr_result['extracted_text']
+        print(f"DEBUG: Extracted text length: {len(written_text)}")
         
         # Vyhodnocení diktátu
+        print("DEBUG: Starting evaluation...")
         evaluation = evaluate_dictation(original_text, written_text)
+        print(f"DEBUG: Evaluation result: {evaluation}")
+        
         if 'error' in evaluation:
+            print(f"DEBUG: Evaluation error: {evaluation['error']}")
             return jsonify({'error': f"Evaluation failed: {evaluation['error']}"}), 500
         
         # Přidání informací o souboru
         evaluation['image_filename'] = filename
         evaluation['ocr_text'] = written_text
         
+        # Uložení vyhodnocení do souboru
+        import json
+        eval_filename = f"evaluation_{timestamp}.json"
+        eval_filepath = os.path.join(EVALUATIONS_DIR, eval_filename)
+        with open(eval_filepath, 'w', encoding='utf-8') as f:
+            json.dump(evaluation, f, ensure_ascii=False, indent=2)
+        
+        evaluation['evaluation_saved_as'] = eval_filename
+        print(f"DEBUG: Evaluation saved to {eval_filename}")
+        print("DEBUG: Evaluation completed successfully")
         return jsonify(evaluation)
         
     except Exception as e:
+        print(f"DEBUG: Exception in evaluate endpoint: {str(e)}")
+        import traceback
+        traceback.print_exc()
         return jsonify({'error': str(e)}), 500
 
 @app.route('/api/audio/<filename>', methods=['GET'])

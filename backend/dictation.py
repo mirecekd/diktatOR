@@ -15,9 +15,9 @@ GEMINI_API_KEY = os.getenv('GEMINI_API_KEY')
 if not GEMINI_API_KEY:
     raise ValueError("GEMINI_API_KEY not found in environment variables. Please set it in .env file.")
 
-gemini_client = genai.Client(api_key=GEMINI_API_KEY)
+GEMINI_DICTATION_MODEL = os.getenv('GEMINI_DICTATION_MODEL', 'gemini-2.5-flash')
 
-MODEL = "gemini-2.5-flash"
+gemini_client = genai.Client(api_key=GEMINI_API_KEY)
 
 def generate_sentences(grade: int, num_sentences: int = 10) -> dict:
     """
@@ -45,6 +45,7 @@ Požadavky:
 - Každá věta musí být smysluplná a gramaticky správná
 - Používej různou interpunkci (tečka, čárka, otazník, vykřičník)
 - od 4. třídy již využívej vyjmenovaná slova
+- od 5. třídy bude v každé větě alespoň 1 vyjmenované slovo
 - Věty by měly být různě dlouhé a pestré, ale max. 15 slov
 
 Vrať pouze seznam vět, každou na samostatném řádku, bez číslování.
@@ -53,16 +54,25 @@ Vrať pouze seznam vět, každou na samostatném řádku, bez číslování.
     try:
         # Volání Google Gemini API
         response = gemini_client.models.generate_content(
-            model=MODEL,
+            model=GEMINI_DICTATION_MODEL,
             contents=prompt,
-            config={
-                'temperature': 0.8,  # Více kreativity
-                'max_output_tokens': 1000
-            }
+            config=genai.types.GenerateContentConfig(
+                temperature=0.8,  # Více kreativity
+                max_output_tokens=4096  # Zvýšený limit pro delší odpovědi
+            )
         )
         
         # Získání odpovědi
-        content = response.text.strip()
+        if hasattr(response, 'text') and response.text:
+            content = response.text.strip()
+        else:
+            # Debug info
+            error_msg = f"No text in response. Response type: {type(response)}"
+            if hasattr(response, 'prompt_feedback'):
+                error_msg += f", prompt_feedback: {response.prompt_feedback}"
+            if hasattr(response, 'candidates'):
+                error_msg += f", candidates: {response.candidates}"
+            raise ValueError(error_msg)
         
         # Rozdělení na jednotlivé věty (každá na novém řádku)
         sentences = [s.strip() for s in content.split('\n') if s.strip()]

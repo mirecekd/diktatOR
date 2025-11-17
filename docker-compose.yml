@@ -1,0 +1,17 @@
+version: '3.8'
+
+services:
+  diktator:
+    build: .
+    container_name: diktator-app
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./data/dictations:/app/data/dictations
+      - ./data/audio:/app/data/audio
+      - ./data/uploads:/app/data/uploads
+      - ./.env:/app/.env:ro
+    environment:
+      - FLASK_ENV=production
+      - PYTHONUNBUFFERED=1
+    restart: unless-stopped

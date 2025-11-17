@@ -1,9 +1,7 @@
 Flask
 flask-cors
 gtts
-openai
 Pillow
 pydub
-easyocr
 google-genai
 python-dotenv

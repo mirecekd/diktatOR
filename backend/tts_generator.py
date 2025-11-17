@@ -35,24 +35,25 @@ def generate_dictation_audio(
     output_path: str,
     pause_duration: float = 5.0,
     slow: bool = True,  # Výchozí: pomalá řeč
+    speed_factor: float = 0.9,  # Faktor zpomalení (0.85 = 85% rychlosti, čím nižší, tím pomalejší)
     lang: str = DEFAULT_LANG
 ) -> str:
     """
     Generuje audio pro diktát se speciální strukturou:
     
-    Pro každou větu:
-    1. Věta pomalu celá
-    2. Krátká pauza (2 sekundy)
-    3. Věta slovo po slovu s pauzami (1 sekunda mezi slovy)
-    4. Krátká pauza (2 sekundy)
-    5. Věta pomalu celá (opakování)
-    6. Dlouhá pauza před další větou (pause_duration)
+    1. Přečte všechny věty naráz pomalu
+    2. Udělá pauzu (pause_duration)
+    3. Pro každou větu:
+       - Přečte větu pomalu (3x)
+       - Pauza mezi větami
+    4. Na konci přečte znovu všechny věty naráz
     
     Args:
         sentences: List vět k nadiktování
         output_path: Cesta k výstupnímu MP3 souboru
         pause_duration: Délka pauzy mezi větami v sekundách (výchozí: 5.0)
         slow: Pomalá řeč pro celé věty (True/False)
+        speed_factor: Faktor zpomalení audio (0.85 = 85% rychlosti, výchozí)
         lang: Jazyk (výchozí: 'cs')
     
     Returns:
@@ -63,52 +64,66 @@ def generate_dictation_audio(
     
     try:
         # Pauzy
-        short_pause = AudioSegment.silent(duration=2000)  # 2 sekundy
-        word_pause = AudioSegment.silent(duration=3000)   # 3 sekundy mezi slovy
-        long_pause = AudioSegment.silent(duration=int(pause_duration * 1000))
+        sentence_pause = AudioSegment.silent(duration=int(pause_duration * 1000))  # 2 sekundy mezi opakováním věty
+        between_sentences_pause = AudioSegment.silent(duration=3000)  # Pauza mezi větami
         
         # Spojíme audio pro všechny věty
         combined = AudioSegment.empty()
         
+        # Krok 1: Přečteme všechny věty naráz pomalu
+        full_text = ' '.join(sentences)
+        full_text_file = os.path.join(temp_dir, "full_text_initial.mp3")
+        tts_full_initial = gTTS(text=full_text, lang=lang, slow=slow)
+        tts_full_initial.save(full_text_file)
+        full_text_audio = AudioSegment.from_mp3(full_text_file)
+        # Zpomalíme audio
+        full_text_audio = full_text_audio._spawn(full_text_audio.raw_data, overrides={
+            "frame_rate": int(full_text_audio.frame_rate * speed_factor)
+        }).set_frame_rate(full_text_audio.frame_rate)
+        os.remove(full_text_file)
+        
+        combined += full_text_audio
+        
+        # Krok 2: Pauza po úvodním přečtení
+        combined += between_sentences_pause
+        
+        # Krok 3: Pro každou větu - přečteme ji 3x
         for i, sentence in enumerate(sentences):
-            # 1. Vygeneruj audio pro celou větu (pomalu)
-            sentence_file = os.path.join(temp_dir, f"sentence_{i}_full.mp3")
-            tts_full = gTTS(text=sentence, lang=lang, slow=slow)
-            tts_full.save(sentence_file)
+            # Vygeneruj audio pro celou větu (pomalu)
+            sentence_file = os.path.join(temp_dir, f"sentence_{i}.mp3")
+            tts_sentence = gTTS(text=sentence, lang=lang, slow=slow)
+            tts_sentence.save(sentence_file)
             sentence_audio = AudioSegment.from_mp3(sentence_file)
+            # Zpomalíme audio
+            sentence_audio = sentence_audio._spawn(sentence_audio.raw_data, overrides={
+                "frame_rate": int(sentence_audio.frame_rate * speed_factor)
+            }).set_frame_rate(sentence_audio.frame_rate)
             os.remove(sentence_file)
             
-            # 2. Vygeneruj audio pro každé slovo zvlášť
-            # Rozdělíme větu na slova (zachováváme interpunkci u posledního slova)
-            words = sentence.replace('.', '').replace(',', '').replace('!', '').replace('?', '').split()
+            # Přečteme větu 3x s pauzami
+            for repeat in range(3):
+                combined += sentence_audio
+                if repeat < 2:  # Pauza mezi opakováními (ne po posledním)
+                    combined += sentence_pause
             
-            word_audios = []
-            for j, word in enumerate(words):
-                word_file = os.path.join(temp_dir, f"sentence_{i}_word_{j}.mp3")
-                tts_word = gTTS(text=word, lang=lang, slow=slow)
-                tts_word.save(word_file)
-                word_audio = AudioSegment.from_mp3(word_file)
-                word_audios.append(word_audio)
-                os.remove(word_file)
-            
-            # Sestavení struktury pro tuto větu:
-            # Celá věta
-            combined += sentence_audio
-            combined += short_pause
-            
-            # Slovo po slovu s pauzami
-            for j, word_audio in enumerate(word_audios):
-                combined += word_audio
-                if j < len(word_audios) - 1:  # Pauza mezi slovy (kromě posledního)
-                    combined += word_pause
-            combined += short_pause
-            
-            # Opakování celé věty
-            combined += sentence_audio
-            
-            # Dlouhá pauza před další větou (kromě poslední věty)
+            # Pauza před další větou (kromě poslední věty)
             if i < len(sentences) - 1:
-                combined += long_pause
+                combined += between_sentences_pause
+        
+        # Krok 4: Na konci přečteme znovu všechny věty
+        combined += between_sentences_pause  # Pauza před závěrečným čtením
+        
+        full_text_final_file = os.path.join(temp_dir, "full_text_final.mp3")
+        tts_full_final = gTTS(text=full_text, lang=lang, slow=slow)
+        tts_full_final.save(full_text_final_file)
+        full_text_final_audio = AudioSegment.from_mp3(full_text_final_file)
+        # Zpomalíme audio
+        full_text_final_audio = full_text_final_audio._spawn(full_text_final_audio.raw_data, overrides={
+            "frame_rate": int(full_text_final_audio.frame_rate * speed_factor)
+        }).set_frame_rate(full_text_final_audio.frame_rate)
+        os.remove(full_text_final_file)
+        
+        combined += full_text_final_audio
         
         # Uložení výsledného souboru
         combined.export(output_path, format="mp3")

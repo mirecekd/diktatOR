@@ -1,17 +1,23 @@
 """
 Modul pro vyhodnocení diktátu pomocí LLM
 """
-from openai import OpenAI
+from google import genai
 from datetime import datetime
 import json
+import os
+from dotenv import load_dotenv
 
-# Konfigurace OpenAI klienta pro playpi4.local
-client = OpenAI(
-    api_key="sk-5OYzLw5vfDWnFw6HZB4vTQ",
-    base_url="http://playpi4.local:4000/v1"
-)
+# Načtení environment variables z .env souboru
+load_dotenv()
 
-MODEL = "eu.anthropic.claude-sonnet-4-5-20250929-v1:0"
+# Konfigurace Google Gemini klienta
+GEMINI_API_KEY = os.getenv('GEMINI_API_KEY')
+if not GEMINI_API_KEY:
+    raise ValueError("GEMINI_API_KEY not found in environment variables. Please set it in .env file.")
+
+GEMINI_EVAL_MODEL = os.getenv('GEMINI_EVAL_MODEL', 'gemini-2.5-flash')
+
+gemini_client = genai.Client(api_key=GEMINI_API_KEY)
 
 
 def evaluate_dictation(original_text: str, written_text: str) -> dict:
@@ -31,6 +37,10 @@ def evaluate_dictation(original_text: str, written_text: str) -> dict:
             'timestamp': str
         }
     """
+    
+    print("DEBUG EVAL: Starting evaluation")
+    print(f"DEBUG EVAL: Original text length: {len(original_text)}")
+    print(f"DEBUG EVAL: Written text length: {len(written_text)}")
     
     prompt = f"""Jsi učitel českého jazyka. Vyhodnoť prosím tento diktát od žáka.
 
@@ -67,19 +77,33 @@ SKÓRE: [číslo 0-100]
 """
 
     try:
-        response = client.chat.completions.create(
-            model=MODEL,
-            messages=[
-                {
-                    "role": "user",
-                    "content": prompt
-                }
-            ],
-            temperature=0.3,  # Nižší teplota pro konzistentní vyhodnocení
-            max_tokens=2000
+        print(f"DEBUG EVAL: Calling Gemini API with model: {GEMINI_EVAL_MODEL}")
+        
+        # Volání Google Gemini API
+        response = gemini_client.models.generate_content(
+            model=GEMINI_EVAL_MODEL,
+            contents=prompt,
+            config=genai.types.GenerateContentConfig(
+                temperature=0.1,  # Nižší teplota pro konzistentní vyhodnocení
+                max_output_tokens=16384  # Zvýšený limit pro delší vyhodnocení (16k)
+            )
         )
         
-        evaluation_text = response.choices[0].message.content.strip()
+        print("DEBUG EVAL: Response received from Gemini")
+        print(f"DEBUG EVAL: Response type: {type(response)}")
+        
+        # Získání odpovědi
+        if hasattr(response, 'text') and response.text:
+            evaluation_text = response.text.strip()
+            print(f"DEBUG EVAL: Evaluation text length: {len(evaluation_text)}")
+            print(f"DEBUG EVAL: First 200 chars: {evaluation_text[:200]}")
+        else:
+            print("DEBUG EVAL: No text in response!")
+            if hasattr(response, 'candidates'):
+                print(f"DEBUG EVAL: Candidates: {response.candidates}")
+            if hasattr(response, 'prompt_feedback'):
+                print(f"DEBUG EVAL: Prompt feedback: {response.prompt_feedback}")
+            raise ValueError("No text in response from Gemini API")
         
         # Parsování odpovědi
         result = {
@@ -93,14 +117,26 @@ SKÓRE: [číslo 0-100]
         try:
             if 'SKÓRE:' in evaluation_text:
                 score_line = [line for line in evaluation_text.split('\n') if 'SKÓRE:' in line][0]
-                score = float(''.join(filter(str.isdigit, score_line)))
-                result['score'] = min(100, max(0, score))
-        except:
+                # Extrahuj první číslo ze skóre (před lomítkem nebo celé číslo)
+                import re
+                score_match = re.search(r'SKÓRE:\s*(\d+)', score_line)
+                if score_match:
+                    score = float(score_match.group(1))
+                    result['score'] = min(100, max(0, score))
+                    print(f"DEBUG EVAL: Extracted score: {result['score']}")
+                else:
+                    result['score'] = None
+        except Exception as score_error:
+            print(f"DEBUG EVAL: Failed to extract score: {score_error}")
             result['score'] = None
         
+        print("DEBUG EVAL: Evaluation completed successfully")
         return result
         
     except Exception as e:
+        print(f"DEBUG EVAL: Exception occurred: {str(e)}")
+        import traceback
+        traceback.print_exc()
         return {
             'error': str(e),
             'timestamp': datetime.now().isoformat()

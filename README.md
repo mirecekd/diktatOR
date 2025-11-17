@@ -1,22 +1,23 @@
 # diktátOR
 
-Inteligentní systém pro procvičování diktátů pomocí AI.
+AI aplikace pro procvičování diktátů.
 
 ## Funkce
 
-- 🎯 **Generování diktátů**: AI vytvoří věty přiměřené zvolenému ročníku (1-9)
-- 🔊 **TTS diktování**: Český hlas přečte věty s pauzami a opakováním
-- 📸 **Focení/upload**: Nahrání fotky napsaného diktátu
-- 🤖 **OCR**: Přečtení textu z fotky pomocí Claude Vision API
-- ✅ **Vyhodnocení**: Detailní analýza chyb a konstruktivní zpětná vazba
+- **Generování diktátů**: AI vytvoří věty přiměřené zvolenému ročníku (1-9)
+- **TTS diktování**: Český hlas přečte věty s pauzami a opakováním
+- **Focení/upload**: Nahrání fotky napsaného diktátu
+- **OCR**: Přečtení textu z fotky pomocí Claude Vision API
+- **Vyhodnocení**: Detailní analýza chyb a konstruktivní zpětná vazba
 
 ## Technologie
 
 ### Backend
 - Python 3.12
 - Flask (API server)
-- OpenAI API (Claude Sonnet 4.5 přes playpi4.local:4000)
-- edge-tts (Text-to-Speech)
+- Google Gemini API (generování vět, OCR, vyhodnocení)
+- gtts (Google Text-to-Speech)
+- pydub (zpracování audio)
 - Pillow (zpracování obrázků)
 
 ### Frontend
@@ -25,6 +26,38 @@ Inteligentní systém pro procvičování diktátů pomocí AI.
 - Fetch API (komunikace s backendem)
 
 ## Instalace a spuštění
+
+### Docker (doporučeno)
+
+Nejjednodušší způsob, jak spustit aplikaci:
+
+```bash
+# 1. Vytvořte .env soubor s API klíčem
+cp .env.example .env
+# Editujte .env a přidejte váš GEMINI_API_KEY
+
+# 2. Sestavení a spuštění
+docker-compose up -d
+
+# 3. Aplikace běží na http://localhost:5000
+```
+
+**Příkazy pro správu:**
+```bash
+# Zobrazení logů
+docker-compose logs -f
+
+# Zastavení
+docker-compose down
+
+# Restart
+docker-compose restart
+
+# Rebuild po změnách
+docker-compose up -d --build
+```
+
+### Manuální instalace (bez Dockeru)
 
 ### 1. Příprava virtuálního prostředí
 
@@ -108,14 +141,32 @@ diktatOR/
 
 ## Konfigurace
 
-### API Endpoint
-Backend používá: `http://playpi4.local:4000/v1`
-- Model: `eu.anthropic.claude-sonnet-4-5-20250929-v1:0`
-- API Key: `sk-5OYzLw5vfDWnFw6HZB4vTQ`
+### Environment Variables (.env)
+Vytvořte soubor `.env` v rootu projektu:
+```
+GEMINI_API_KEY=your_api_key_here
+
+# Gemini Models - can be configured separately for each task
+GEMINI_DICTATION_MODEL=gemini-2.5-flash
+GEMINI_OCR_MODEL=gemini-2.5-flash
+GEMINI_EVAL_MODEL=gemini-2.5-flash
+```
+
+Získejte API klíč z: https://aistudio.google.com/app/apikey
+
+### Gemini Models
+Můžete konfigurovat různé modely pro každý úkol:
+- **GEMINI_DICTATION_MODEL**: Generování vět pro diktát
+- **GEMINI_OCR_MODEL**: OCR přečtení textu z fotek
+- **GEMINI_EVAL_MODEL**: Vyhodnocení diktátu
+
+Výchozí model pro všechny: `gemini-2.5-flash`
 
 ### TTS Nastavení
-- Hlas: `cs-CZ-AntoninNeural` (český mužský hlas)
-- Rychlost: 80% normální rychlosti (rate: -20%)
+- Google TTS (gtts)
+- Jazyk: čeština (cs)
+- Pomalá řeč: ANO (slow=True)
+- Speed factor: 0.85 (zpomaleno na 85% rychlosti)
 - Formát: MP3
 
 ## API Endpointy
@@ -129,18 +180,20 @@ Backend používá: `http://playpi4.local:4000/v1`
 
 ## Řešení problémů
 
-### Edge-TTS vrací chybu 403
+### Chybějící API klíč
 ```bash
-pip install --upgrade edge-tts
+# Ujistěte se, že máte .env soubor s GEMINI_API_KEY
+cp .env.example .env
+# Pak editujte .env a přidejte svůj API klíč
 ```
 
 ### CORS chyby ve frontendu
 - Ujistěte se, že Flask server běží
 - Zkontrolujte, že CORS je povolený v `app.py`
 
-### Claude API nefunguje
-- Ověřte dostupnost `playpi4.local:4000`
-- Zkontrolujte API klíč a model
+### Gemini API quota exceeded
+- Zkontrolujte využití API na: https://ai.dev/usage?tab=rate-limit
+- Model `gemini-2.5-flash` má vyšší kvóty než experimental modely
 
 ## Autor
 

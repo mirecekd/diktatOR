@@ -1,21 +1,45 @@
-# .git
-# .gitignore
-__pycache__
-*.pyc
-*.pyo
-*.pyd
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
 .Python
-env
-*.log
-.dockerignore
-Dockerfile
+env/
+venv/
+ENV/
+.venv
+
+# Virtual environments
+diktator/
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Git
+.git/
+.gitignore
+
+# Environment
+.env
+
+# Data directories (exclude from build, will be mounted as volumes)
+data/dictations/*
+data/audio/*
+data/uploads/*
+
+# Documentation
+README.md
 *.md
-LICENSE
-.devcontainer
-.vscode
-public
-venv
-runme.sh
-chats.db
-memory-bank
-data
+
+# Docker
+Dockerfile
+.dockerignore
+docker-compose.yml
