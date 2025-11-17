@@ -27,7 +27,7 @@ AI aplikace pro procvičování diktátů.
 
 ## Instalace a spuštění
 
-### Docker (doporučeno)
+### Docker Compose (doporučeno)
 
 Nejjednodušší způsob, jak spustit aplikaci:
 
@@ -55,6 +55,46 @@ docker-compose restart
 
 # Rebuild po změnách
 docker-compose up -d --build
+```
+
+### Docker (bez docker-compose)
+
+Pokud nechcete používat docker-compose, můžete použít přímo Docker:
+
+```bash
+# 1. Vytvořte .env soubor s API klíčem
+cp .env.example .env
+# Editujte .env a přidejte váš GEMINI_API_KEY
+
+# 2. Build Docker image
+docker build -t diktator .
+
+# 3. Spuštění kontejneru
+docker run -d \
+  --name diktator \
+  -p 5000:5000 \
+  --env-file .env \
+  -v $(pwd)/data:/app/data \
+  diktator
+
+# 4. Aplikace běží na http://localhost:5000
+```
+
+**Příkazy pro správu:**
+```bash
+# Zobrazení logů
+docker logs -f diktator
+
+# Zastavení a odstranění kontejneru
+docker stop diktator
+docker rm diktator
+
+# Restart kontejneru
+docker restart diktator
+
+# Rebuild image po změnách
+docker build -t diktator .
+# Pak stop, rm a znovu run s novým image
 ```
 
 ### Manuální instalace (bez Dockeru)
@@ -194,11 +234,3 @@ cp .env.example .env
 ### Gemini API quota exceeded
 - Zkontrolujte využití API na: https://ai.dev/usage?tab=rate-limit
 - Model `gemini-2.5-flash` má vyšší kvóty než experimental modely
-
-## Autor
-
-Vytvořeno pomocí Cline s využitím Baby Steps™ metodologie.
-
-## Licence
-
-Interní projekt pro osobní použití.
