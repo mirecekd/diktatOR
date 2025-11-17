@@ -1,0 +1,21 @@
+# .git
+# .gitignore
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.Python
+env
+*.log
+.dockerignore
+Dockerfile
+*.md
+LICENSE
+.devcontainer
+.vscode
+public
+venv
+runme.sh
+chats.db
+memory-bank
+data
