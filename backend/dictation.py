@@ -1,18 +1,23 @@
 """
-Modul pro generování diktátů pomocí Claude LLM
+Modul pro generování diktátů pomocí Google Gemini 2.5 Flash
 """
-from openai import OpenAI
+from google import genai
 import json
 from datetime import datetime
 import os
+from dotenv import load_dotenv
 
-# Konfigurace OpenAI klienta pro playpi4.local
-client = OpenAI(
-    api_key="sk-5OYzLw5vfDWnFw6HZB4vTQ",
-    base_url="http://playpi4.local:4000/v1"
-)
+# Načtení environment variables z .env souboru
+load_dotenv()
 
-MODEL = "eu.anthropic.claude-sonnet-4-5-20250929-v1:0"
+# Konfigurace Google Gemini klienta
+GEMINI_API_KEY = os.getenv('GEMINI_API_KEY')
+if not GEMINI_API_KEY:
+    raise ValueError("GEMINI_API_KEY not found in environment variables. Please set it in .env file.")
+
+gemini_client = genai.Client(api_key=GEMINI_API_KEY)
+
+MODEL = "gemini-2.5-flash"
 
 def generate_sentences(grade: int, num_sentences: int = 10) -> dict:
     """
@@ -39,26 +44,25 @@ Požadavky:
 - Používej slovní zásobu a gramatiku odpovídající věku
 - Každá věta musí být smysluplná a gramaticky správná
 - Používej různou interpunkci (tečka, čárka, otazník, vykřičník)
-- Věty by měly být různě dlouhé a pestré
+- od 4. třídy již využívej vyjmenovaná slova
+- Věty by měly být různě dlouhé a pestré, ale max. 15 slov
 
 Vrať pouze seznam vět, každou na samostatném řádku, bez číslování.
 """
 
     try:
-        response = client.chat.completions.create(
+        # Volání Google Gemini API
+        response = gemini_client.models.generate_content(
             model=MODEL,
-            messages=[
-                {
-                    "role": "user",
-                    "content": prompt
-                }
-            ],
-            temperature=0.8,  # Více kreativity
-            max_tokens=1000
+            contents=prompt,
+            config={
+                'temperature': 0.8,  # Více kreativity
+                'max_output_tokens': 1000
+            }
         )
         
         # Získání odpovědi
-        content = response.choices[0].message.content.strip()
+        content = response.text.strip()
         
         # Rozdělení na jednotlivé věty (každá na novém řádku)
         sentences = [s.strip() for s in content.split('\n') if s.strip()]

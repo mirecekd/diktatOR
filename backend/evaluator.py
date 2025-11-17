@@ -110,7 +110,7 @@ SKÓRE: [číslo 0-100]
 if __name__ == '__main__':
     # Test vyhodnocení
     original = "Maminka peče koláč. Pes si hraje na zahradě."
-    written = "Maminka pece kolac. Pes si hraje na zahrade."
+    written = "Maminka pece kolac. Pes sy hraje na zahjadě."
     
     print("Testing evaluation...")
     print(f"\nOriginal: {original}")
