@@ -43,7 +43,7 @@ Požadavky:
 - Věty musí být přiměřené úrovni žáka {grade}. třídy
 - Používej slovní zásobu a gramatiku odpovídající věku
 - Každá věta musí být smysluplná a gramaticky správná
-- Používej různou interpunkci (tečka, čárka, otazník, vykřičník)
+- Používej pouze tečku a otazník na konci vět. Čárky uvnitř vět jsou povolené. NIKDY nepoužívej vykřičník, protože se těžko identifikuje při TTS
 - od 4. třídy již využívej vyjmenovaná slova
 - od 5. třídy bude v každé větě alespoň 1 vyjmenované slovo
 - Věty by měly být různě dlouhé a pestré, ale max. 15 slov
