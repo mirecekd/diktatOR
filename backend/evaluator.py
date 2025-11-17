@@ -38,10 +38,6 @@ def evaluate_dictation(original_text: str, written_text: str) -> dict:
         }
     """
     
-    print("DEBUG EVAL: Starting evaluation")
-    print(f"DEBUG EVAL: Original text length: {len(original_text)}")
-    print(f"DEBUG EVAL: Written text length: {len(written_text)}")
-    
     prompt = f"""Jsi učitel českého jazyka. Vyhodnoť prosím tento diktát od žáka.
 
 ORIGINÁLNÍ TEXT (co bylo nadiktováno):
@@ -57,6 +53,12 @@ Vyhodnoť diktát a poskytni:
 4. Doporučení pro zlepšení
 
 Buď konstruktivní a povzbuzující. Pamatuj, že je to žák základní školy.
+
+DŮLEŽITÉ PRAVIDLO FORMÁTOVÁNÍ:
+- NEPOUŽÍVEJ MARKDOWN syntaxi (žádné hvězdičky, podtržítka apod.)
+- Použij jen prostý text
+- Nepoužívej tučný text (bold), kurzívu nebo jiné formátování
+- Piš jen normální text bez markdown značek
 
 Vrať odpověď v následujícím formátu:
 
@@ -77,8 +79,6 @@ SKÓRE: [číslo 0-100]
 """
 
     try:
-        print(f"DEBUG EVAL: Calling Gemini API with model: {GEMINI_EVAL_MODEL}")
-        
         # Volání Google Gemini API
         response = gemini_client.models.generate_content(
             model=GEMINI_EVAL_MODEL,
@@ -89,20 +89,10 @@ SKÓRE: [číslo 0-100]
             )
         )
         
-        print("DEBUG EVAL: Response received from Gemini")
-        print(f"DEBUG EVAL: Response type: {type(response)}")
-        
         # Získání odpovědi
         if hasattr(response, 'text') and response.text:
             evaluation_text = response.text.strip()
-            print(f"DEBUG EVAL: Evaluation text length: {len(evaluation_text)}")
-            print(f"DEBUG EVAL: First 200 chars: {evaluation_text[:200]}")
         else:
-            print("DEBUG EVAL: No text in response!")
-            if hasattr(response, 'candidates'):
-                print(f"DEBUG EVAL: Candidates: {response.candidates}")
-            if hasattr(response, 'prompt_feedback'):
-                print(f"DEBUG EVAL: Prompt feedback: {response.prompt_feedback}")
             raise ValueError("No text in response from Gemini API")
         
         # Parsování odpovědi
@@ -123,18 +113,14 @@ SKÓRE: [číslo 0-100]
                 if score_match:
                     score = float(score_match.group(1))
                     result['score'] = min(100, max(0, score))
-                    print(f"DEBUG EVAL: Extracted score: {result['score']}")
                 else:
                     result['score'] = None
-        except Exception as score_error:
-            print(f"DEBUG EVAL: Failed to extract score: {score_error}")
+        except:
             result['score'] = None
         
-        print("DEBUG EVAL: Evaluation completed successfully")
         return result
         
     except Exception as e:
-        print(f"DEBUG EVAL: Exception occurred: {str(e)}")
         import traceback
         traceback.print_exc()
         return {

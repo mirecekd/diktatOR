@@ -37,15 +37,10 @@ def extract_text_from_image(image_path: str) -> dict:
             'timestamp': str
         }
     """
-    print(f"DEBUG OCR: Starting OCR for image: {image_path}")
-    
     try:
         # Načtení obrázku jako bytes
-        print(f"DEBUG OCR: Reading image file...")
         with open(image_path, 'rb') as image_file:
             image_bytes = image_file.read()
-        
-        print(f"DEBUG OCR: Image size: {len(image_bytes)} bytes")
         
         # Určení MIME typu
         ext = os.path.splitext(image_path)[1].lower()
@@ -57,7 +52,6 @@ def extract_text_from_image(image_path: str) -> dict:
             '.webp': 'image/webp'
         }
         mime_type = mime_types.get(ext, 'image/jpeg')
-        print(f"DEBUG OCR: MIME type: {mime_type}")
         
         # Prompt pro OCR
         prompt = """Přečti prosím text z tohoto obrázku diktátu od žáka základní školy.
@@ -69,8 +63,6 @@ DŮLEŽITÉ INSTRUKCE:
 - Zachovej všechny chyby v psaní
 - Vrať text větu po větě, každou na novém řádku
 - Nepiš nic dalšího, jen samotný přečtený text"""
-        
-        print(f"DEBUG OCR: Calling Gemini API with model: {GEMINI_OCR_MODEL}")
         
         # Volání Google Gemini API
         response = gemini_client.models.generate_content(
@@ -84,19 +76,9 @@ DŮLEŽITÉ INSTRUKCE:
             ]
         )
         
-        print(f"DEBUG OCR: Response received from Gemini")
-        print(f"DEBUG OCR: Response type: {type(response)}")
-        
         if hasattr(response, 'text') and response.text:
             extracted_text = response.text.strip()
-            print(f"DEBUG OCR: Extracted text length: {len(extracted_text)}")
-            print(f"DEBUG OCR: First 100 chars: {extracted_text[:100]}")
         else:
-            print(f"DEBUG OCR: No text in response!")
-            if hasattr(response, 'candidates'):
-                print(f"DEBUG OCR: Candidates: {response.candidates}")
-            if hasattr(response, 'prompt_feedback'):
-                print(f"DEBUG OCR: Prompt feedback: {response.prompt_feedback}")
             extracted_text = ""
         
         result = {
@@ -105,11 +87,9 @@ DŮLEŽITÉ INSTRUKCE:
             'timestamp': datetime.now().isoformat()
         }
         
-        print(f"DEBUG OCR: OCR completed successfully")
         return result
         
     except Exception as e:
-        print(f"DEBUG OCR: Exception occurred: {str(e)}")
         import traceback
         traceback.print_exc()
         return {

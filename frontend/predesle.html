@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Předešlé diktáty - diktátOR</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>diktátOR</h1>
+            <p class="subtitle">AI aplikace pro procvičování diktátů</p>
+        </header>
+
+        <div id="loading" class="loading">
+            <div class="spinner"></div>
+            <p>Načítám předešlé diktáty...</p>
+        </div>
+
+        <div id="evaluations-list"></div>
+
+        <div id="no-evaluations" class="hidden" style="text-align: center; padding: 40px; color: #666;">
+            <p>Zatím žádné vyhodnocené diktáty.</p>
+            <a href="/" class="btn btn-primary" style="text-decoration: none; display: block; width: 100%; max-width: 400px; margin: 20px auto 0;">Zpět na hlavní stránku</a>
+        </div>
+    </div>
+
+    <script src="predesle.js"></script>
+</body>
+</html>
