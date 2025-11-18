@@ -14,7 +14,7 @@ AI aplikace pro procvičování diktátů.
 - **Generování diktátů**: AI vytvoří věty přiměřené zvolenému ročníku (1-9)
 - **TTS diktování**: Český hlas přečte věty s pauzami a opakováním
 - **Focení/upload**: Nahrání fotky napsaného diktátu
-- **OCR**: Přečtení textu z fotky pomocí Claude Vision API
+- **OCR**: Přečtení textu z fotky pomocí Google Gemini Vision API
 - **Vyhodnocení**: Detailní analýza chyb a konstruktivní zpětná vazba
 
 ## Technologie
@@ -36,14 +36,14 @@ AI aplikace pro procvičování diktátů.
 
 ### Docker Compose (doporučeno)
 
-Nejjednodušší způsob, jak spustit aplikaci:
+Nejjednodušší způsob, jak spustit aplikaci. Aplikace používá **předpřipravený Docker image** z GitHub Container Registry (`ghcr.io/mirecekd/diktator`).
 
 ```bash
 # 1. Vytvořte .env soubor s API klíčem
 cp .env.example .env
 # Editujte .env a přidejte váš GEMINI_API_KEY
 
-# 2. Sestavení a spuštění
+# 2. Spuštění (automaticky stáhne image z ghcr.io)
 docker-compose up -d
 
 # 3. Aplikace běží na http://localhost:5000
@@ -66,25 +66,36 @@ docker-compose up -d --build
 
 ### Docker (bez docker-compose)
 
-Pokud nechcete používat docker-compose, můžete použít přímo Docker:
+Pokud nechcete používat docker-compose, můžete použít přímo Docker s **předpřipraveným image z ghcr.io**:
 
 ```bash
 # 1. Vytvořte .env soubor s API klíčem
 cp .env.example .env
 # Editujte .env a přidejte váš GEMINI_API_KEY
 
-# 2. Build Docker image
+# 2. Stažení a spuštění kontejneru (používá prebuildený image)
+docker run -d \
+  --name diktator \
+  -p 5000:5000 \
+  --env-file .env \
+  -v $(pwd)/data:/app/data \
+  ghcr.io/mirecekd/diktator:latest
+
+# 3. Aplikace běží na http://localhost:5000
+```
+
+**Alternativně - lokální build:**
+```bash
+# Pokud chcete image sestavit sami
 docker build -t diktator .
 
-# 3. Spuštění kontejneru
+# Pak spusťte s lokálním tagem
 docker run -d \
   --name diktator \
   -p 5000:5000 \
   --env-file .env \
   -v $(pwd)/data:/app/data \
   diktator
-
-# 4. Aplikace běží na http://localhost:5000
 ```
 
 **Příkazy pro správu:**
@@ -99,8 +110,8 @@ docker rm diktator
 # Restart kontejneru
 docker restart diktator
 
-# Rebuild image po změnách
-docker build -t diktator .
+# Update na nejnovější verzi z ghcr.io
+docker pull ghcr.io/mirecekd/diktator:latest
 # Pak stop, rm a znovu run s novým image
 ```
 
@@ -172,7 +183,7 @@ diktatOR/
 │   ├── app.py              # Flask API server
 │   ├── dictation.py        # Generování vět pomocí LLM
 │   ├── tts_generator.py    # TTS s edge-tts
-│   ├── ocr_processor.py    # Claude Vision OCR
+│   ├── ocr_processor.py    # Google Gemini Vision OCR
 │   ├── evaluator.py        # Vyhodnocení diktátu
 │   └── requirements.txt    # Python dependencies
 ├── frontend/
