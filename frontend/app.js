@@ -189,7 +189,7 @@ function drawImageOnCanvas(img, angle) {
 
 function handleRotate() {
     if (!originalImageData) return;
-    rotation = (rotation + 90) % 360;
+    rotation = (rotation - 90 + 360) % 360;
     drawImageOnCanvas(originalImageData, rotation);
 }
 
