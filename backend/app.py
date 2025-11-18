@@ -150,6 +150,9 @@ def evaluate_dictation_endpoint():
     if not original_text:
         return jsonify({'error': 'Original text is required'}), 400
     
+    # Získání názvu audio souboru (pokud je dostupný)
+    audio_filename = request.form.get('audio_filename', '')
+    
     try:
         # Uložení obrázku
         file = request.files['image']
@@ -180,6 +183,10 @@ def evaluate_dictation_endpoint():
         # Přidání informací o souboru
         evaluation['image_filename'] = filename
         evaluation['ocr_text'] = written_text
+        
+        # Přidat audio filename pokud byl poskytnut
+        if audio_filename:
+            evaluation['audio_file'] = audio_filename
         
         # Uložení vyhodnocení do souboru
         import json
@@ -215,14 +222,12 @@ def get_evaluations():
                     # Přidej název souboru pro reference
                     evaluation['filename'] = os.path.basename(eval_file)
                     
-                    # Najdi odpovídající audio soubor (pokud existuje)
-                    # Timestamp z evaluation souboru
-                    timestamp = os.path.basename(eval_file).replace('evaluation_', '').replace('.json', '')
-                    
-                    # Hledej audio soubory se stejným nebo podobným timestampem
-                    audio_files = glob.glob(os.path.join(AUDIO_DIR, f'dictation_{timestamp[:8]}*.mp3'))
-                    if audio_files:
-                        evaluation['audio_file'] = os.path.basename(sorted(audio_files)[0])
+                    # Pokud audio_file není v JSON (staré evaluations), zkus najít podle timestampu
+                    if 'audio_file' not in evaluation:
+                        timestamp = os.path.basename(eval_file).replace('evaluation_', '').replace('.json', '')
+                        audio_file = os.path.join(AUDIO_DIR, f'dictation_{timestamp}.mp3')
+                        if os.path.exists(audio_file):
+                            evaluation['audio_file'] = os.path.basename(audio_file)
                     
                     evaluations.append(evaluation)
             except Exception as e:

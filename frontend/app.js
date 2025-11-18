@@ -100,6 +100,9 @@ async function handleGenerate() {
         }
 
         const audioData = await audioResponse.json();
+        
+        // Uložit název audio souboru pro pozdější použití
+        currentDictation.audio_filename = audioData.filename;
 
         // Přehrání audio
         loading.classList.add('hidden');
@@ -212,6 +215,7 @@ async function handleEvaluate() {
         formData.append('image', blob, 'dictation.jpg');
         formData.append('original_text', currentDictation.full_text);
         formData.append('sentences', JSON.stringify(currentDictation.sentences));
+        formData.append('audio_filename', currentDictation.audio_filename);
 
         const response = await fetch(`${API_URL}/evaluate`, {
             method: 'POST',
