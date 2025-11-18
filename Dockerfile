@@ -17,7 +17,6 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Kopírování aplikace
 COPY backend/ /app/backend/
 COPY frontend/ /app/frontend/
-COPY data/ /app/data/
 
 # Vytvoření adresářů pro data
 RUN mkdir -p /app/data/dictations /app/data/audio /app/data/uploads
