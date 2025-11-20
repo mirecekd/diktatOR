@@ -25,7 +25,7 @@ Inteligentní aplikace pro procvičování pravopisu pomocí diktátů. Systém 
 - Student píše věty na papír
 
 ### 3. Nahrání a vyhodnocení
-- Nahrajte fotografii napsaného diktátu
+- Nahrajte fotografii napsaného diktátu (focení je dostupné na mobilních zařízeních)
 - OCR přečte text z fotky pomocí Google Gemini Vision API
 - AI vyhodnotí správnost a poskytne detailní zpětnou vazbu se skóre
 
