@@ -4,10 +4,30 @@ AI aplikace pro procvičování diktátů.
 
 <div align="center">
 
-[!["Buy Me A Coffee"](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://www.buymeacoffee.com/mirecekdg)
+[!["Buy Me A Coffee"](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://www.buymeacoffee.com/mirecekd)
 
 </div>
 
+## Co je diktátOR?
+
+Inteligentní aplikace pro procvičování pravopisu pomocí diktátů. Systém automaticky generuje věty přiměřené zvolenému ročníku (1-9), přečte je českým hlasem, vyhodnotí napsaný text z fotky a poskytne detailní zpětnou vazbu.
+
+## Jak to funguje?
+
+### 1. Vyberte parametry
+- Ročník (1-9) - ovlivňuje obtížnost vět
+- Počet vět (5-20)
+- Pauza mezi větami (2-10 sekund)
+
+### 2. Generování a diktování
+- AI vytvoří věty odpovídající zvolenému ročníku
+- Systém přečte věty českým hlasem s pauzami
+- Student píše věty na papír
+
+### 3. Nahrání a vyhodnocení
+- Nahrajte fotografii napsaného diktátu
+- OCR přečte text z fotky pomocí Google Gemini Vision API
+- AI vyhodnotí správnost a poskytne detailní zpětnou vazbu se skóre
 
 ## Funkce
 
@@ -32,25 +52,88 @@ AI aplikace pro procvičování diktátů.
 - Canvas API (rotace a úprava fotek)
 - Fetch API (komunikace s backendem)
 
+## Struktura projektu
+
+```
+diktatOR/
+├── backend/
+│   ├── app.py              # Flask API server
+│   ├── dictation.py        # Generování vět pomocí LLM
+│   ├── tts_generator.py    # TTS s edge-tts
+│   ├── ocr_processor.py    # Google Gemini Vision OCR
+│   ├── evaluator.py        # Vyhodnocení diktátu
+│   └── requirements.txt    # Python dependencies
+├── frontend/
+│   ├── index.html          # Hlavní stránka
+│   ├── app.js             # JavaScript logika
+│   └── styles.css         # Styling
+├── data/
+│   ├── dictations/        # Uložené diktáty (JSON)
+│   ├── audio/             # MP3 soubory
+│   └── uploads/           # Nahrané fotky
+└── README.md
+```
+
+## Konfigurace
+
+### Environment Variables (.env)
+Vytvořte soubor `.env` v rootu projektu:
+```
+GEMINI_API_KEY=your_api_key_here
+
+# Gemini Models - can be configured separately for each task
+GEMINI_DICTATION_MODEL=gemini-2.5-flash
+GEMINI_OCR_MODEL=gemini-2.5-flash
+GEMINI_EVAL_MODEL=gemini-2.5-flash
+```
+
+Získejte API klíč z: https://aistudio.google.com/app/apikey
+
+### Gemini Models
+Můžete konfigurovat různé modely pro každý úkol:
+- **GEMINI_DICTATION_MODEL**: Generování vět pro diktát
+- **GEMINI_OCR_MODEL**: OCR přečtení textu z fotek
+- **GEMINI_EVAL_MODEL**: Vyhodnocení diktátu
+
+Výchozí model pro všechny: `gemini-2.5-flash`
+
+### TTS Nastavení
+- Google TTS (gtts)
+- Jazyk: čeština (cs)
+- Pomalá řeč: ANO (slow=True)
+- Speed factor: 0.85 (zpomaleno na 85% rychlosti)
+- Formát: MP3
+
+## API Endpointy
+
+- `GET /api/health` - Health check
+- `POST /api/generate` - Generování vět pro diktát
+- `POST /api/dictate` - Vytvoření audio souboru
+- `POST /api/upload` - Upload fotky
+- `POST /api/evaluate` - Vyhodnocení diktátu
+- `GET /api/audio/<filename>` - Stažení audio souboru
+
+---
+
 ## Instalace a spuštění
 
 > **Poznámka pro Windows:** Všechny příkazy níže obsahují varianty pro Windows (PowerShell/CMD), Linux i Mac. Docker Compose funguje stejně na všech platformách.
 
-### 🎯 Kterou metodu zvolit?
+### Kterou metodu zvolit?
 
 | Metoda | Obtížnost | Výhody | Pro koho? |
 |--------|-----------|--------|-----------|
-| **Docker Compose** | ⭐ Nejjednodušší | Žádná ruční instalace závislostí, funguje všude stejně | **Doporučeno pro všechny** |
-| Docker (bez compose) | ⭐⭐ Střední | Více kontroly, stále izolované prostředí | Pokročilejší uživatelé |
-| Manuální instalace | ⭐⭐⭐ Složité | Plná kontrola, bez Dockeru | Vývojáři, kteří Docker nechtějí |
+| **Docker Compose** | Nejjednodušší | Žádná ruční instalace závislostí, funguje všude stejně | **Doporučeno pro všechny** |
+| Docker (bez compose) | Střední | Více kontroly, stále izolované prostředí | Pokročilejší uživatelé |
+| Manuální instalace | Složité | Plná kontrola, bez Dockeru | Vývojáři, kteří Docker nechtějí |
 
 ### Co je Docker a proč ho používat?
 
 **Docker** je nástroj, který umožňuje spouštět aplikace v izolovaných kontejnerech. Výhody:
-- ✅ Není potřeba instalovat Python, ffmpeg ani jiné závislosti
-- ✅ Aplikace běží stejně na všech systémech (Windows, Mac, Linux)
-- ✅ Jednoduchá instalace a aktualizace
-- ✅ Žádné konflikty s jinými aplikacemi
+- Není potřeba instalovat Python, ffmpeg ani jiné závislosti
+- Aplikace běží stejně na všech systémech (Windows, Mac, Linux)
+- Jednoduchá instalace a aktualizace
+- Žádné konflikty s jinými aplikacemi
 
 **Docker Compose** je nástroj pro snadné spouštění Docker aplikací pomocí konfiguračního souboru.
 
@@ -89,15 +172,15 @@ docker --version
 docker-compose --version
 ```
 
-> **💡 Tip:** Po instalaci Docker Desktop hledejte ikonu velryby 🐋 v systémové liště (Windows: pravý dolní roh, Mac: horní lišta). Když je Docker aktivní, ikona je normální. Když Docker nestartuje, ikona je animovaná nebo šedá.
+> **Tip:** Po instalaci Docker Desktop hledejte ikonu velryby v systémové liště (Windows: pravý dolní roh, Mac: horní lišta). Když je Docker aktivní, ikona je normální. Když Docker nestartuje, ikona je animovaná nebo šedá.
 
-> **📌 Poznámka pro Linux:** Na Linuxu není nutný Docker Desktop. Stačí nainstalovat `docker` a `docker-compose` balíčky přes správce balíčků.
+> **Poznámka pro Linux:** Na Linuxu není nutný Docker Desktop. Stačí nainstalovat `docker` a `docker-compose` balíčky přes správce balíčků.
 
 ### Docker Compose (doporučeno)
 
 Nejjednodušší způsob, jak spustit aplikaci. Aplikace používá **předpřipravený Docker image** z GitHub Container Registry (`ghcr.io/mirecekd/diktator`).
 
-#### ⚡ Rychlý start (pro úplné začátečníky)
+#### Rychlý start (pro úplné začátečníky)
 
 1. **Nainstalujte Docker Desktop** (viz sekce výše)
 2. **Spusťte Docker Desktop** a počkejte, až naběhne (ikona v systémové liště)
@@ -112,11 +195,11 @@ Nejjednodušší způsob, jak spustit aplikaci. Aplikace používá **předpřip
 5. **Spusťte:** `docker-compose up -d`
 6. **Otevřete prohlížeč:** http://localhost:5000
 
-Hotovo! 🎉
+Hotovo!
 
 ---
 
-#### 📝 Detailní postup
+#### Detailní postup
 
 ```bash
 # 1. Vytvořte .env soubor s API klíčem
@@ -231,7 +314,7 @@ docker pull ghcr.io/mirecekd/diktator:latest
 
 ---
 
-### ❓ Časté dotazy k Dockeru
+### Časté dotazy k Dockeru
 
 **Q: Musím mít Docker zapnutý vždy, když chci používat aplikaci?**
 A: Ano, Docker Desktop musí běžet, aby aplikace fungovala. Ale můžete ji nastavit, aby se spouštěla automaticky při startu systému.
@@ -309,89 +392,6 @@ http://localhost:5000
 ```
 
 **To je vše!** Frontend i backend běží na stejném serveru.
-
-## Workflow použití
-
-1. **Nastavení**
-   - Vyberte ročník (1-9)
-   - Zvolte počet vět (5-20)
-   - Nastavte pauzu mezi větami (2-10 sekund)
-
-2. **Generování a diktování**
-   - Klikněte na "Vygenerovat diktát"
-   - Počkejte na vygenerování textu a audio
-   - Přehrajte audio a pište věty na papír
-
-3. **Nahrání fotky**
-   - Vyfotěte nebo nahrajte fotografii napsaného diktátu
-   - Případně otočte fotku pomocí tlačítka rotace
-   - Klikněte na "Vyhodnotit"
-
-4. **Vyhodnocení**
-   - Systém přečte text z fotky pomocí OCR
-   - AI vyhodnotí správnost a poskytne zpětnou vazbu
-   - Zobrazí se skóre a detailní rozbor chyb
-
-## Struktura projektu
-
-```
-diktatOR/
-├── backend/
-│   ├── app.py              # Flask API server
-│   ├── dictation.py        # Generování vět pomocí LLM
-│   ├── tts_generator.py    # TTS s edge-tts
-│   ├── ocr_processor.py    # Google Gemini Vision OCR
-│   ├── evaluator.py        # Vyhodnocení diktátu
-│   └── requirements.txt    # Python dependencies
-├── frontend/
-│   ├── index.html          # Hlavní stránka
-│   ├── app.js             # JavaScript logika
-│   └── styles.css         # Styling
-├── data/
-│   ├── dictations/        # Uložené diktáty (JSON)
-│   ├── audio/             # MP3 soubory
-│   └── uploads/           # Nahrané fotky
-└── README.md
-```
-
-## Konfigurace
-
-### Environment Variables (.env)
-Vytvořte soubor `.env` v rootu projektu:
-```
-GEMINI_API_KEY=your_api_key_here
-
-# Gemini Models - can be configured separately for each task
-GEMINI_DICTATION_MODEL=gemini-2.5-flash
-GEMINI_OCR_MODEL=gemini-2.5-flash
-GEMINI_EVAL_MODEL=gemini-2.5-flash
-```
-
-Získejte API klíč z: https://aistudio.google.com/app/apikey
-
-### Gemini Models
-Můžete konfigurovat různé modely pro každý úkol:
-- **GEMINI_DICTATION_MODEL**: Generování vět pro diktát
-- **GEMINI_OCR_MODEL**: OCR přečtení textu z fotek
-- **GEMINI_EVAL_MODEL**: Vyhodnocení diktátu
-
-Výchozí model pro všechny: `gemini-2.5-flash`
-
-### TTS Nastavení
-- Google TTS (gtts)
-- Jazyk: čeština (cs)
-- Pomalá řeč: ANO (slow=True)
-- Speed factor: 0.85 (zpomaleno na 85% rychlosti)
-- Formát: MP3
-
-## API Endpointy
-
-- `GET /api/health` - Health check
-- `POST /api/generate` - Generování vět pro diktát
-- `POST /api/dictate` - Vytvoření audio souboru
-- `POST /api/upload` - Upload fotky
-- `POST /api/evaluate` - Vyhodnocení diktátu
-- `GET /api/audio/<filename>` - Stažení audio souboru
 
 ## Řešení problémů
 
