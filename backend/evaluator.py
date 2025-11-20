@@ -6,6 +6,7 @@ from datetime import datetime
 import json
 import os
 from dotenv import load_dotenv
+from gemini_retry import retry_with_backoff
 
 # Načtení environment variables z .env souboru
 load_dotenv()
@@ -18,6 +19,32 @@ if not GEMINI_API_KEY:
 GEMINI_EVAL_MODEL = os.getenv('GEMINI_EVAL_MODEL', 'gemini-2.5-flash')
 
 gemini_client = genai.Client(api_key=GEMINI_API_KEY)
+
+
+@retry_with_backoff(max_retries=5, initial_delay=1.0, backoff_factor=2.0, max_delay=60.0)
+def _call_gemini_api(prompt: str) -> str:
+    """
+    Volá Gemini API s retry/backoff logikou.
+    
+    Args:
+        prompt: Prompt pro API
+        
+    Returns:
+        str: Text odpovědi z API
+    """
+    response = gemini_client.models.generate_content(
+        model=GEMINI_EVAL_MODEL,
+        contents=prompt,
+        config=genai.types.GenerateContentConfig(
+            temperature=0.1,  # Nižší teplota pro konzistentní vyhodnocení
+            max_output_tokens=16384  # Zvýšený limit pro delší vyhodnocení (16k)
+        )
+    )
+    
+    if hasattr(response, 'text') and response.text:
+        return response.text.strip()
+    else:
+        raise ValueError("No text in response from Gemini API")
 
 
 def evaluate_dictation(original_text: str, written_text: str) -> dict:
@@ -79,21 +106,8 @@ SKÓRE: [číslo 0-100]
 """
 
     try:
-        # Volání Google Gemini API
-        response = gemini_client.models.generate_content(
-            model=GEMINI_EVAL_MODEL,
-            contents=prompt,
-            config=genai.types.GenerateContentConfig(
-                temperature=0.1,  # Nižší teplota pro konzistentní vyhodnocení
-                max_output_tokens=16384  # Zvýšený limit pro delší vyhodnocení (16k)
-            )
-        )
-        
-        # Získání odpovědi
-        if hasattr(response, 'text') and response.text:
-            evaluation_text = response.text.strip()
-        else:
-            raise ValueError("No text in response from Gemini API")
+        # Volání Google Gemini API s retry/backoff logikou
+        evaluation_text = _call_gemini_api(prompt)
         
         # Parsování odpovědi
         result = {

@@ -9,6 +9,7 @@ from google import genai
 from datetime import datetime
 import os
 from dotenv import load_dotenv
+from gemini_retry import retry_with_backoff
 
 # Načtení environment variables z .env souboru
 load_dotenv()
@@ -21,6 +22,36 @@ if not GEMINI_API_KEY:
 GEMINI_OCR_MODEL = os.getenv('GEMINI_OCR_MODEL', 'gemini-2.5-flash')
 
 gemini_client = genai.Client(api_key=GEMINI_API_KEY)
+
+
+@retry_with_backoff(max_retries=5, initial_delay=1.0, backoff_factor=2.0, max_delay=60.0)
+def _call_gemini_ocr_api(image_bytes: bytes, mime_type: str, prompt: str) -> str:
+    """
+    Volá Gemini API pro OCR s retry/backoff logikou.
+    
+    Args:
+        image_bytes: Bytes obrázku
+        mime_type: MIME typ obrázku
+        prompt: Prompt pro OCR
+        
+    Returns:
+        str: Extrahovaný text z obrázku
+    """
+    response = gemini_client.models.generate_content(
+        model=GEMINI_OCR_MODEL,
+        contents=[
+            genai.types.Part.from_bytes(
+                data=image_bytes,
+                mime_type=mime_type
+            ),
+            prompt
+        ]
+    )
+    
+    if hasattr(response, 'text') and response.text:
+        return response.text.strip()
+    else:
+        raise ValueError("No text in response from Gemini API")
 
 
 def extract_text_from_image(image_path: str) -> dict:
@@ -64,22 +95,8 @@ DŮLEŽITÉ INSTRUKCE:
 - Vrať text větu po větě, každou na novém řádku
 - Nepiš nic dalšího, jen samotný přečtený text"""
         
-        # Volání Google Gemini API
-        response = gemini_client.models.generate_content(
-            model=GEMINI_OCR_MODEL,
-            contents=[
-                genai.types.Part.from_bytes(
-                    data=image_bytes,
-                    mime_type=mime_type
-                ),
-                prompt
-            ]
-        )
-        
-        if hasattr(response, 'text') and response.text:
-            extracted_text = response.text.strip()
-        else:
-            extracted_text = ""
+        # Volání Google Gemini API s retry/backoff logikou
+        extracted_text = _call_gemini_ocr_api(image_bytes, mime_type, prompt)
         
         result = {
             'extracted_text': extracted_text,

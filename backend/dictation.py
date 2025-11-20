@@ -6,6 +6,7 @@ import json
 from datetime import datetime
 import os
 from dotenv import load_dotenv
+from gemini_retry import retry_with_backoff
 
 # Načtení environment variables z .env souboru
 load_dotenv()
@@ -18,6 +19,39 @@ if not GEMINI_API_KEY:
 GEMINI_DICTATION_MODEL = os.getenv('GEMINI_DICTATION_MODEL', 'gemini-2.5-flash')
 
 gemini_client = genai.Client(api_key=GEMINI_API_KEY)
+
+
+@retry_with_backoff(max_retries=5, initial_delay=1.0, backoff_factor=2.0, max_delay=60.0)
+def _call_gemini_dictation_api(prompt: str) -> str:
+    """
+    Volá Gemini API pro generování diktátu s retry/backoff logikou.
+    
+    Args:
+        prompt: Prompt pro generování diktátu
+        
+    Returns:
+        str: Vygenerovaný text diktátu
+    """
+    response = gemini_client.models.generate_content(
+        model=GEMINI_DICTATION_MODEL,
+        contents=prompt,
+        config=genai.types.GenerateContentConfig(
+            temperature=0.8,  # Více kreativity
+            max_output_tokens=4096  # Zvýšený limit pro delší odpovědi
+        )
+    )
+    
+    if hasattr(response, 'text') and response.text:
+        return response.text.strip()
+    else:
+        # Debug info
+        error_msg = f"No text in response. Response type: {type(response)}"
+        if hasattr(response, 'prompt_feedback'):
+            error_msg += f", prompt_feedback: {response.prompt_feedback}"
+        if hasattr(response, 'candidates'):
+            error_msg += f", candidates: {response.candidates}"
+        raise ValueError(error_msg)
+
 
 def generate_sentences(grade: int, num_sentences: int = 10) -> dict:
     """
@@ -52,27 +86,8 @@ Vrať pouze seznam vět, každou na samostatném řádku, bez číslování.
 """
 
     try:
-        # Volání Google Gemini API
-        response = gemini_client.models.generate_content(
-            model=GEMINI_DICTATION_MODEL,
-            contents=prompt,
-            config=genai.types.GenerateContentConfig(
-                temperature=0.8,  # Více kreativity
-                max_output_tokens=4096  # Zvýšený limit pro delší odpovědi
-            )
-        )
-        
-        # Získání odpovědi
-        if hasattr(response, 'text') and response.text:
-            content = response.text.strip()
-        else:
-            # Debug info
-            error_msg = f"No text in response. Response type: {type(response)}"
-            if hasattr(response, 'prompt_feedback'):
-                error_msg += f", prompt_feedback: {response.prompt_feedback}"
-            if hasattr(response, 'candidates'):
-                error_msg += f", candidates: {response.candidates}"
-            raise ValueError(error_msg)
+        # Volání Google Gemini API s retry/backoff logikou
+        content = _call_gemini_dictation_api(prompt)
         
         # Rozdělení na jednotlivé věty (každá na novém řádku)
         sentences = [s.strip() for s in content.split('\n') if s.strip()]
