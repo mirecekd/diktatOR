@@ -83,7 +83,7 @@ GEMINI_API_KEY=your_api_key_here
 
 # Gemini Models - can be configured separately for each task
 GEMINI_DICTATION_MODEL=gemini-2.5-flash
-GEMINI_OCR_MODEL=gemini-2.5-flash
+GEMINI_OCR_MODEL=gemini-3-pro-preview
 GEMINI_EVAL_MODEL=gemini-2.5-flash
 ```
 
@@ -94,8 +94,6 @@ Můžete konfigurovat různé modely pro každý úkol:
 - **GEMINI_DICTATION_MODEL**: Generování vět pro diktát
 - **GEMINI_OCR_MODEL**: OCR přečtení textu z fotek
 - **GEMINI_EVAL_MODEL**: Vyhodnocení diktátu
-
-Výchozí model pro všechny: `gemini-2.5-flash`
 
 ### TTS Nastavení
 - Google TTS (gtts)
