@@ -71,10 +71,20 @@ def generate_sentences(grade: int, num_sentences: int = 10) -> dict:
     """
     
     # Prompt pro generování vět podle ročníku
-    prompt = f"""Vygeneruj {num_sentences} vět pro diktát v češtině pro žáky {grade}. třídy základní školy.
+    prompt = f"""Vygeneruj {num_sentences} vět pro diktát v češtině pro žáky {grade}. třídy základní školy
+podle typického učiva české mluvnice. Zde jsou hlavní zaměření podle ročníku:.
+1. třída: délka samohlásek, měkké a tvrdé souhlásky, velká písmena na začátku věty a jmen.
+2. třída: rozlišování měkkých a tvrdých souhlásek, psaní vyjmenovaných slov začínajících.
+3. třída: vyjmenovaná slova, tvorba částí slova, základní druhy slov.
+4. třída: procvičování vyjmenovaných slov, vzory podstatných jmen, skladba věty.
+5. třída: shoda přísudku s podmětem, rozbor vět, větné členy.
+6. třída: pokročilý pravopis bě/bje, vě/vje, mě/mně, zájmena, větné vzorce.
+7. třída: rozbor slovních druhů, pravidla psaní velkých písmen, skladba vět.
+8. třída: pravopis přejatých slov, slovní zásoba, slovesné kategorie a složitější skladba.
+9. třída: rozšířené větné členy, druhy vedlejších vět, opakování pravopisných jevů.
 
 Požadavky:
-- Věty musí být přiměřené úrovni žáka {grade}. třídy
+- Věty mají být spisovné, jasné a zaměřené na praktické procvičení platných mluvnických pravidel pro {grade}. ročník
 - Používej slovní zásobu a gramatiku odpovídající věku
 - Každá věta musí být smysluplná a gramaticky správná
 - Používej pouze tečku a otazník na konci vět. Čárky uvnitř vět jsou povolené. NIKDY nepoužívej vykřičník, protože se těžko identifikuje při TTS
