@@ -4,7 +4,7 @@ AI aplikace pro procvičování diktátů.
 
 <div align="center">
 
-[!["Buy Me A Coffee"](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://www.buymeacoffee.com/mirecekdg)
+[!["Buy Me A Coffee"](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://www.buymeacoffee.com/mirecekdg) [!["PayPal.me"](https://www.paypalobjects.com/en_US/i/btn/btn_donateCC_LG.gif)](https://www.paypal.com/donate/?business=LJ5ZF7Q9KMTRW&no_recurring=0&currency_code=USD)
 
 </div>
 
@@ -468,3 +468,13 @@ wsl --install
 - Pokud instalujete bez Dockeru na Windows, musíte nainstalovat ffmpeg samostatně
 - Stáhněte z: https://ffmpeg.org/download.html
 - Přidejte ffmpeg do PATH
+
+## Support
+
+If this tool is useful to you, you can support development:
+
+<div align="center">
+
+[!["Buy Me A Coffee"](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://www.buymeacoffee.com/mirecekdg) [!["PayPal.me"](https://www.paypalobjects.com/en_US/i/btn/btn_donateCC_LG.gif)](https://www.paypal.com/donate/?business=LJ5ZF7Q9KMTRW&no_recurring=0&currency_code=USD)
+
+</div>
